@@ -1,7 +1,7 @@
 "use server";
 
-import {currentUser } from "@clerk/nextjs/server";
-import {users} from '@clerk/clerk-sdk-node'
+import { currentUser } from "@clerk/nextjs/server";
+import { users } from "@clerk/clerk-sdk-node";
 import { db } from "./db";
 import { redirect } from "next/navigation";
 import { User } from "@prisma/client";
@@ -85,22 +85,22 @@ export const saveActivityLogsNotification = async ({
         },
       },
     });
-  } else{
+  } else {
     await db.notification.create({
-        data: {
-          notification: `${userData?.name} | ${description}`,
-          User: {
-            connect: {
-              id: userData?.id,
-            },
-          },
-          Agency: {
-            connect: {
-              id: foundAgencyID,
-            },
+      data: {
+        notification: `${userData?.name} | ${description}`,
+        User: {
+          connect: {
+            id: userData?.id,
           },
         },
-      });
+        Agency: {
+          connect: {
+            id: foundAgencyID,
+          },
+        },
+      },
+    });
   }
 };
 
@@ -134,28 +134,29 @@ export const verifyAndAcceptInvitation = async () => {
         updatedAt: new Date(),
       });
       await saveActivityLogsNotification({
-        agencyId:invitationExists?.agencyId,
-        description:`Joined`,
-        subaccountId:undefined,
-      })
+        agencyId: invitationExists?.agencyId,
+        description: `Joined`,
+        subaccountId: undefined,
+      });
       if (userDetails) {
-        await users.updateUserMetadata(user.id, {privateMetadata:{
-            role:userDetails.role || 'SUBACCOUNT_USER'
-        }})
+        await users.updateUserMetadata(user.id, {
+          privateMetadata: {
+            role: userDetails.role || "SUBACCOUNT_USER",
+          },
+        });
         await db.invitation.delete({
-            where:{email:userDetails.email}
-        })
-        return userDetails.agencyId
-      } else return null
-    }else{
-        const agency = await db.user.findUnique({
-            where:{
-                email:user.emailAddresses[0].emailAddress,
-            },
-        })
-        return agency? agency.agencyId : null
+          where: { email: userDetails.email },
+        });
+        return userDetails.agencyId;
+      } else return null;
+    } else {
+      const agency = await db.user.findUnique({
+        where: {
+          email: user.emailAddresses[0].emailAddress,
+        },
+      });
+      return agency ? agency.agencyId : null;
     }
-    
   } catch (error) {
     console.log(error);
   }
